@@ -1,22 +1,23 @@
-LIB_SRC_s = $(wildcard ./Source/server/*.c)
-LIB_OBJ_s = $(LIB_SRC_s:.c=.o)
-LIB_SRC_c = $(wildcard ./Source/sh13/*.c)
-LIB_OBJ_c = $(LIB_SRC_c:.c=.o)
-CC = gcc
-FLAGS = -Wall  -I/usr/include/SDL2 -lSDL2_image -lSDL2_ttf -lSDL2  -lpthread -o
-all: server sh13
+LATEX_CMD=pdflatex
 
-server: $(LIB_SRC_s)
-	$(CC) $(LIB_SRC_s) $(FLAGS)     $@
-sh13: $(LIB_SRC_c)
-	$(CC) $(LIB_SRC_c)  $(FLAGS)    $@
+all: refman.pdf
+
+pdf: refman.pdf
+
+refman.pdf: clean refman.tex
+	$(LATEX_CMD) refman
+	makeindex refman.idx
+	$(LATEX_CMD) refman
+	latex_count=8 ; \
+	while egrep -s 'Rerun (LaTeX|to get cross-references right)' refman.log && [ $$latex_count -gt 0 ] ;\
+	    do \
+	      echo "Rerunning latex...." ;\
+	      $(LATEX_CMD) refman ;\
+	      latex_count=`expr $$latex_count - 1` ;\
+	    done
+	makeindex refman.idx
+	$(LATEX_CMD) refman
+
+
 clean:
-	rm -rf *.o server sh13
-generate:
-	./server localhost 32000
-.depend:
-	$(CC) -MM $(LIB_SRC_c) $(LIB_SRC_s) > .depend ;
-
--include .depend
-
-.PHONY: clean all
+	rm -f *.ps *.dvi *.aux *.toc *.idx *.ind *.ilg *.log *.out *.brf *.blg *.bbl refman.pdf
